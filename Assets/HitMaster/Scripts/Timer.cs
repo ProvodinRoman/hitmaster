@@ -10,8 +10,12 @@ namespace HM {
         public float TimeLeft {
             get => _timeLeft;
             set {
-                _timeLeft = value;
+                _timeLeft = Mathf.Max(0, value);
                 OnValueChanged?.Invoke(value);
+
+                if(value <= 0) {
+                    IsPaused = true;
+                }
             }
         }
 
@@ -57,6 +61,8 @@ namespace HM {
                 float timeAfter = Time.time;
                 TimeLeft -= timeAfter - timeBefore;
             }
+
+            TimeLeft = 0;
         }
     }
 }

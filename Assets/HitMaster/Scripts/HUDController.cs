@@ -1,10 +1,12 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace HM {
     public class HUDController : MonoBehaviour {
+        public event Action OnStartButtonClicked;
+
 #pragma warning disable 0649
         [SerializeField] private TMPro.TextMeshProUGUI _timerLabel;
         [SerializeField] private GameObject _startScreen;
@@ -26,7 +28,7 @@ namespace HM {
 
         private void HandleOnStartButtonClicked() {
             _startScreen.SetActive(false);
-            GameManager.Instance.Continue();
+            OnStartButtonClicked?.Invoke();
         }
     }
 }

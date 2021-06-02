@@ -7,13 +7,19 @@ namespace HM {
 
 #pragma warning disable 0649
         [SerializeField] private List<Collider> _bodyColliders;
+        [SerializeField] private Transform _rightHandWeaponHolder;
         [SerializeField] private Animator _animator;
+
 #pragma warning restore 0649
 
         private Entity _entity;
+        private bool _readyToShoot = false;
 
-        public void Init(Entity entity) {
-
+        public void Init(Entity entity, Vector3 worldPos, Vector3 eulerAngles) {
+            _entity = entity;
+            transform.position = worldPos;
+            transform.eulerAngles = eulerAngles;
+            _readyToShoot = true;
         }
 
         public void EnableColliders(bool enable) {
@@ -30,6 +36,20 @@ namespace HM {
                     rigidBody.isKinematic = isKinematic;
                 }
             }
+        }
+
+        public void SetAnimatorIsRunning(bool value) {
+            _animator.SetBool("IsRunning", value);
+        }
+
+        public void Shoot(Vector3 targetWorldPos) {
+            _animator.SetTrigger("Shoot");
+        }
+
+        public void Equip(Transform obj) {
+            obj.SetParent(_rightHandWeaponHolder, false);
+            obj.SetPositionAndRotation(_rightHandWeaponHolder.position, _rightHandWeaponHolder.rotation);
+            obj.localScale = Vector3.zero;
         }
 
         private void HandleOnHealthChanged(int before, int now) {
