@@ -127,4 +127,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _collider: {fileID: 2240290328980746121}
   _lifetime: 10
-  _damage: 20
+  _damage: 35

@@ -39,6 +39,8 @@ namespace HM {
             if (_lifeTimeRoutine != null) {
                 StopCoroutine(_lifeTimeRoutine);
             }
+
+            OnLifeTimeOver?.Invoke(this);
         }
 
         private void OnTriggerEnter(Collider other) {

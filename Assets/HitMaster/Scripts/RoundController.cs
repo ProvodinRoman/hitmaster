@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using System.Linq;
 
 namespace HM {
     public class RoundController : MonoBehaviour {
+        public static event Action<RoundController> OnRoundCompleted;
 
 #pragma warning disable 0649
         [SerializeField] private List<Transform> _enemiesSpawnPoints;
@@ -44,6 +46,7 @@ namespace HM {
                         e.EnableColliders(false);
                         e.SetRigidbodyKinematicState(true);
                         e.gameObject.SetActive(false);
+                        e.Entity.OnHealthChanged -= HandleOnEnemyHealthChanged;
                         enemiesPool.ReturnToPool(e);
                     }
                     _currentEnemies.Clear();
@@ -76,7 +79,7 @@ namespace HM {
             for (int i = 0; i < enemiesCount && i < nextRound._enemiesSpawnPoints.Count && i < nextRound._enemiesAfterJumpPoints.Count; i++) {
                 var enemy = enemiesPool.Get();
                 enemy.SetRigidbodyKinematicState(true);
-                enemy.EnableAnimator(false);
+                enemy.EnableAnimator(true);
                 enemy.EnableColliders(false);
 
                 enemy.Init(new Entity(), nextRound._enemiesSpawnPoints[i].position, nextRound._enemiesSpawnPoints[i].eulerAngles);
@@ -84,6 +87,7 @@ namespace HM {
                 enemy.gameObject.SetActive(true);
 
                 nextRound._currentEnemies.Add(enemy);
+                enemy.Entity.OnHealthChanged += nextRound.HandleOnEnemyHealthChanged;
 
                 yield return null;
             }
@@ -114,6 +118,14 @@ namespace HM {
             GameManager.Instance.UIHPBarsController.SetHealthBarsTo(nextRound._currentEnemies);
 
             yield return s.Play().WaitForCompletion();
+        }
+
+        private void HandleOnEnemyHealthChanged(int max, int before, int now) {
+            int deadEnemies = _currentEnemies.Count(e => e.Entity.Health <= 0);
+
+            if (deadEnemies >= _currentEnemies.Count) {
+                OnRoundCompleted?.Invoke(this);
+            }
         }
     }
 }

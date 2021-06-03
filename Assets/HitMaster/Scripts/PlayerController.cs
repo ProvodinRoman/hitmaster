@@ -85,7 +85,7 @@ namespace HM {
 
         private void HandleAnimatorEvent(string parameter) {
             if (_shootEventName.Equals(parameter)) {
-                if (_knifeInHand != null) {
+                if (_knifeInHand != null && _knifeInHand.gameObject.activeInHierarchy) {
                     _knifeInHand.Throw(_knifeTargetWorldPos, 20f);
                 }
 

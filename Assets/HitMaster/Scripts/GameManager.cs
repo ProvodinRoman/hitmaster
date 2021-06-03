@@ -52,6 +52,10 @@ namespace HM {
             MoveToNextRound();
         }
 
+        private void HandleOnRoundCompleted(RoundController roundController) {
+            MoveToNextRound();
+        }
+
         private void Awake() {
 
             _enemiesPool = new ComponentPool<EntityController>(_enemyPrefab);
@@ -67,6 +71,8 @@ namespace HM {
             Timer.OnValueChanged += HandleOnTimerTicked;
 
             _HUDController.OnStartButtonClicked += HandleOnStartButtonClicked;
+
+            RoundController.OnRoundCompleted += HandleOnRoundCompleted;
 
             foreach (var round in _rounds) {
 
