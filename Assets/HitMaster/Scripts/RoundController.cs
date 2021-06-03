@@ -25,31 +25,23 @@ namespace HM {
             return (_playerWaypoints[_playerWaypoints.Count - 1].position, _playerWaypoints[_playerWaypoints.Count - 1].rotation);
         }
 
-        public void TransitToRound(RoundController nextRound, EntityController entity, Transform camera, 
+        public void TransitToRound(RoundController nextRound, EntityController playerEntity, Transform camera, 
                     int enemiesCount, ComponentPool<EntityController> enemiesPool, Action onCharacterAtFinish, Action onEnemiesJumpedIn) {
-            entity.SetRigidbodyKinematicState(true);
-            entity.EnableColliders(false);
-            entity.EnableAnimator(true);
+            playerEntity.SetRigidbodyKinematicState(true);
+            playerEntity.EnableColliders(false);
+            playerEntity.EnableAnimator(true);
 
-            entity.SetAnimatorIsRunning(true);
+            playerEntity.SetAnimatorIsRunning(true);
 
             Sequence cameraMoveSequence = DOTween.Sequence();
             camera.DOKill(true);
             cameraMoveSequence.Append(camera.DOMove(_cameraPos.position, .2f));
             cameraMoveSequence.Join( camera.DORotateQuaternion(_cameraPos.rotation, .2f));
 
-            StartCoroutine(CharacterRunCoroutine(nextRound, entity.transform, 5f, enemiesCount, enemiesPool, onCharacterAtFinish,
+            StartCoroutine(CharacterRunCoroutine(nextRound, playerEntity.transform, 5f, enemiesCount, enemiesPool, onCharacterAtFinish,
                 () => {
                     onEnemiesJumpedIn?.Invoke();
-                    foreach (var e in _currentEnemies) {
-                        e.EnableAnimator(false);
-                        e.EnableColliders(false);
-                        e.SetRigidbodyKinematicState(true);
-                        e.gameObject.SetActive(false);
-                        e.Entity.OnHealthChanged -= HandleOnEnemyHealthChanged;
-                        enemiesPool.ReturnToPool(e);
-                    }
-                    _currentEnemies.Clear();
+                    ClearRound(enemiesPool);
                 }));
 
             
@@ -58,14 +50,26 @@ namespace HM {
             cameraMoveSequence.Play();
         }
 
-        private IEnumerator CharacterRunCoroutine(RoundController nextRound, Transform entity, float speed, 
+        public void ClearRound(ComponentPool<EntityController> enemiesPool) {
+            foreach (var e in _currentEnemies) {
+                e.EnableAnimator(false);
+                e.EnableColliders(false);
+                e.SetRigidbodyKinematicState(true);
+                e.gameObject.SetActive(false);
+                e.Entity.OnHealthChanged -= HandleOnEnemyHealthChanged;
+                enemiesPool.ReturnToPool(e);
+            }
+            _currentEnemies.Clear();
+        }
+
+        private IEnumerator CharacterRunCoroutine(RoundController nextRound, Transform playerEntity, float speed, 
                     int enemiesCount, ComponentPool<EntityController> enemiesPool, Action onCharacterAtFinish, Action onEnemiesJumpedIn) {
 
             foreach (var point in _playerWaypoints) {
-                float distance = (entity.position - point.position).magnitude;
-                entity.LookAt(point);
-                yield return entity.DOMove(point.position, distance / speed).SetEase(Ease.Linear).WaitForCompletion();
-                entity.rotation = point.rotation;
+                float distance = (playerEntity.position - point.position).magnitude;
+                playerEntity.LookAt(point);
+                yield return playerEntity.DOMove(point.position, distance / speed).SetEase(Ease.Linear).WaitForCompletion();
+                playerEntity.rotation = point.rotation;
             }
 
             onCharacterAtFinish?.Invoke();

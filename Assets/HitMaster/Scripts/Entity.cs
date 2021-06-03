@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace HM {
     public class Entity {
-
+        public static event Action<Entity> OnDied;
         /// <summary>
         /// <max, before, now>
         /// </summary>
@@ -19,6 +19,10 @@ namespace HM {
                 int before = _health;
                 _health = value;
                 OnHealthChanged?.Invoke(MaxHealth, before, value);
+
+                if(_health <= 0) {
+                    OnDied?.Invoke(this);
+                }
             }
         }
 

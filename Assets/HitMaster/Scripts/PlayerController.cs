@@ -8,6 +8,8 @@ namespace HM {
     public class PlayerController : EntityController {
         public event Action<float> OnReloadProgress; // fill 0-1
 
+        public bool AllowShooting = false;
+
 #pragma warning disable 0649
         [SerializeField] private Transform _rightHandWeaponHolder;
         [SerializeField] private ThrowingWeapon _knifePrefab;
@@ -16,18 +18,16 @@ namespace HM {
 
         private ComponentPool<ThrowingWeapon> _knifesPool;
         private ThrowingWeapon _knifeInHand;
-        private bool _readyToShoot = false;
 
         private Vector3 _knifeTargetWorldPos;
 
         public override void Init(Entity entity, Vector3 worldPos, Vector3 eulerAngles) {
             base.Init(entity, worldPos, eulerAngles);
-            _readyToShoot = true;
         }
 
         public void Shoot(Vector3 targetWorldPos) {
-            if (_readyToShoot) {
-                _readyToShoot = false;
+            if (AllowShooting) {
+                AllowShooting = false;
                 _knifeTargetWorldPos = targetWorldPos;
                 _animator.SetTrigger("Shoot");
                 StartCoroutine(ReloadRoutine(.5f));
@@ -67,10 +67,14 @@ namespace HM {
             }
 
             OnReloadProgress?.Invoke(1f);
-            _readyToShoot = true;
+            AllowShooting = true;
         }
 
         private void HandleOnTouchDetected(Vector2 screenPosInPixels) {
+            if(Entity.Health <= 0 && !AllowShooting) {
+                return;
+            }
+
             var ray = Camera.main.ScreenPointToRay(screenPosInPixels);
 
             Vector3 targetWorldPos = default;

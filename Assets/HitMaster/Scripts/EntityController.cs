@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace HM {
     public class EntityController : MonoBehaviour {
-
+        
         public Entity Entity { get; private set; }
         public Vector3 HealthBarWorldPos => _healthBarPos.position;
 

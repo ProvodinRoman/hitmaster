@@ -1,10 +1,12 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using HM.Extentions;
 
 namespace HM {
     public class GameManager : MonoBehaviour {
+        public event Action OnGameOver;
+
         public static GameManager Instance { get; private set; }
 
         public Timer Timer { get; private set; }
@@ -15,7 +17,9 @@ namespace HM {
         [SerializeField] private List<RoundController> _rounds;
         [SerializeField] private HUDController _HUDController;
         [SerializeField] private UIHealthBarsController _uiHPBarsController;
-        [SerializeField] private EntityController _playerController;
+        [SerializeField] private UIMenuManager _menuManager;
+        [SerializeField] private PlayerController _playerController;
+        [SerializeField] private int _initialTime = 20;
         [Space]
         [SerializeField] private EntityController _enemyPrefab;
 #pragma warning restore 0649
@@ -25,35 +29,57 @@ namespace HM {
         private int _currentRound = 0;
 
         public void MoveToNextRound() {
+            _playerController.AllowShooting = false;
+
             _rounds[_currentRound].TransitToRound(
                         _rounds[_rounds.GetSafeClampedIndex(_currentRound + 1)],
                         _playerController,
                         Camera.main.transform,
                         3,
                         _enemiesPool,
-                        () => _playerController.SetAnimatorIsRunning(false),
+                        () => {
+                            _playerController.SetAnimatorIsRunning(false);
+                            _playerController.AllowShooting = true;
+                        },
                         () => Timer.IsPaused = false
                         );
 
             _currentRound = _rounds.GetSafeClampedIndex(_currentRound + 1);
         }
 
-        private void HandleOnPlayerReady() {
+        public void RestartGame() {
+            _rounds.ForEach(r => r.ClearRound(_enemiesPool));
+            _uiHPBarsController.CleanUp();
 
+            _playerController.Entity.Health = Entity.MaxHealth;
+
+            Timer.TimeLeft = _initialTime;
+            _currentRound = 0;
+            _playerController.transform.position = _rounds[_rounds.GetSafeClampedIndex(_currentRound - 1)].GetLastPlayerWaypoint().pos;
+            MoveToNextRound();
         }
 
         private void HandleOnTimerTicked(float timeLeft) {
             if (timeLeft <= 0) {
-
+                _playerController.AllowShooting = false;
+                _playerController.Entity.Health = 0;
+                Timer.IsPaused = true;
+                OnGameOver?.Invoke();
             }
         }
 
         private void HandleOnStartButtonClicked() {
-            MoveToNextRound();
+            RestartGame();
         }
 
         private void HandleOnRoundCompleted(RoundController roundController) {
             MoveToNextRound();
+        }
+
+        private void HandleOnEntityDied(Entity entity) {
+            if (_playerController.Entity != null && _playerController.Entity != entity) {
+                Timer.TimeLeft += 5;
+            }
         }
 
         private void Awake() {
@@ -67,16 +93,13 @@ namespace HM {
             var posData = _rounds[_rounds.GetSafeClampedIndex(_currentRound - 1)].GetLastPlayerWaypoint();
             _playerController.Init(new Entity(), posData.pos, posData.rotation.eulerAngles);
 
-            Timer = new Timer(20, this);
+            Timer = new Timer(_initialTime, this);
             Timer.OnValueChanged += HandleOnTimerTicked;
 
-            _HUDController.OnStartButtonClicked += HandleOnStartButtonClicked;
+            _menuManager.OnStartButtonClicked += HandleOnStartButtonClicked;
 
             RoundController.OnRoundCompleted += HandleOnRoundCompleted;
-
-            foreach (var round in _rounds) {
-
-            }
+            Entity.OnDied += HandleOnEntityDied;
 
             Instance = this;
         }
@@ -86,6 +109,5 @@ namespace HM {
                 MoveToNextRound();
             }
         }
-
     }
 }
