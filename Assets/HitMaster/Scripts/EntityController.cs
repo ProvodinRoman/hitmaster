@@ -6,10 +6,12 @@ using UnityEngine;
 namespace HM {
     public class EntityController : MonoBehaviour {
 
-        public  Entity Entity { get; private set; }
+        public Entity Entity { get; private set; }
+        public Vector3 HealthBarWorldPos => _healthBarPos.position;
 
 #pragma warning disable 0649
         [SerializeField] private List<Collider> _bodyColliders;
+        [SerializeField] private Transform _healthBarPos;
         [SerializeField] protected Animator _animator;
 #pragma warning restore 0649
 

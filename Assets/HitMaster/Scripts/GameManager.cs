@@ -9,9 +9,12 @@ namespace HM {
 
         public Timer Timer { get; private set; }
 
+        public UIHealthBarsController UIHPBarsController => _uiHPBarsController;
+
 #pragma warning disable 0649
         [SerializeField] private List<RoundController> _rounds;
         [SerializeField] private HUDController _HUDController;
+        [SerializeField] private UIHealthBarsController _uiHPBarsController;
         [SerializeField] private EntityController _playerController;
         [Space]
         [SerializeField] private EntityController _enemyPrefab;

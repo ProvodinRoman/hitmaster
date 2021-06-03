@@ -111,6 +111,8 @@ namespace HM {
                 s.Join(tween);
             }
 
+            GameManager.Instance.UIHPBarsController.SetHealthBarsTo(nextRound._currentEnemies);
+
             yield return s.Play().WaitForCompletion();
         }
     }
