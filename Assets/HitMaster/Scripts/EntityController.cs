@@ -1,25 +1,23 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace HM {
     public class EntityController : MonoBehaviour {
 
+        public  Entity Entity { get; private set; }
+
 #pragma warning disable 0649
         [SerializeField] private List<Collider> _bodyColliders;
-        [SerializeField] private Transform _rightHandWeaponHolder;
-        [SerializeField] private Animator _animator;
-
+        [SerializeField] protected Animator _animator;
 #pragma warning restore 0649
 
-        private Entity _entity;
-        private bool _readyToShoot = false;
-
-        public void Init(Entity entity, Vector3 worldPos, Vector3 eulerAngles) {
-            _entity = entity;
+        public virtual void Init(Entity entity, Vector3 worldPos, Vector3 eulerAngles) {
+            Entity = entity;
+            Entity.OnHealthChanged += HandleOnHealthChanged;
             transform.position = worldPos;
             transform.eulerAngles = eulerAngles;
-            _readyToShoot = true;
         }
 
         public void EnableColliders(bool enable) {
@@ -42,28 +40,17 @@ namespace HM {
             _animator.SetBool("IsRunning", value);
         }
 
-        public void Shoot(Vector3 targetWorldPos) {
-            _animator.SetTrigger("Shoot");
-        }
-
-        public void Equip(Transform obj) {
-            obj.SetParent(_rightHandWeaponHolder, false);
-            obj.SetPositionAndRotation(_rightHandWeaponHolder.position, _rightHandWeaponHolder.rotation);
-            obj.localScale = Vector3.zero;
-        }
-
-        private void HandleOnHealthChanged(int before, int now) {
-
-        }
-
-
-        private void Awake() {
-            
+        private void HandleOnHealthChanged(int max, int before, int now) {
+            if (now <= 0) {
+                EnableAnimator(false);
+                EnableColliders(true);
+                SetRigidbodyKinematicState(false);
+            }
         }
 
         private void OnDisable() {
-            if (_entity != null) {
-                _entity.OnHealthChanged -= HandleOnHealthChanged;
+            if (Entity != null) {
+                Entity.OnHealthChanged -= HandleOnHealthChanged;
             }
         }
     }

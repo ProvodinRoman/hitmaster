@@ -11,10 +11,15 @@ namespace HM {
         [SerializeField] private TMPro.TextMeshProUGUI _timerLabel;
         [SerializeField] private GameObject _startScreen;
         [SerializeField] private Button _startButton;
+        [SerializeField] private Image _reloadImage;
 #pragma warning restore 0649
 
         private void Awake() {
             _startButton.onClick.AddListener(HandleOnStartButtonClicked);
+            var player = FindObjectOfType<PlayerController>(true);
+            if (player != null) {
+                player.OnReloadProgress += HandleOnReloadProgress;
+            }
         }
 
         private void Start() {
@@ -29,6 +34,10 @@ namespace HM {
         private void HandleOnStartButtonClicked() {
             _startScreen.SetActive(false);
             OnStartButtonClicked?.Invoke();
+        }
+
+        private void HandleOnReloadProgress(float progress) {
+            _reloadImage.fillAmount = progress;
         }
     }
 }

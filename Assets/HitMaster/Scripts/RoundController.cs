@@ -79,7 +79,7 @@ namespace HM {
                 enemy.EnableAnimator(false);
                 enemy.EnableColliders(false);
 
-                enemy.transform.SetPositionAndRotation(nextRound._enemiesSpawnPoints[i].position, nextRound._enemiesSpawnPoints[i].rotation);
+                enemy.Init(new Entity(), nextRound._enemiesSpawnPoints[i].position, nextRound._enemiesSpawnPoints[i].eulerAngles);
 
                 enemy.gameObject.SetActive(true);
 
@@ -91,14 +91,23 @@ namespace HM {
             Sequence s = DOTween.Sequence();
 
             for (int i = 0; i < nextRound._currentEnemies.Count && i < nextRound._enemiesAfterJumpPoints.Count; i++) {
+
                 float jumpForce = UnityEngine.Random.Range(1.5f, 3f);
                 float duration = UnityEngine.Random.Range(.5f, 1f);
 
                 float delay = UnityEngine.Random.Range(.1f, .4f);
 
-                var tween = nextRound._currentEnemies[i].transform.DOJump(nextRound._enemiesAfterJumpPoints[i].position, jumpForce, 1, duration)
+                var curEnemy = nextRound._currentEnemies[i];
+                var tween = curEnemy.transform.DOJump(nextRound._enemiesAfterJumpPoints[i].position, jumpForce, 1, duration)
                     .SetEase(Ease.InCubic);
-                tween.Join(nextRound._currentEnemies[i].transform.DORotateQuaternion(nextRound._enemiesAfterJumpPoints[i].rotation, duration));
+                tween.Join(curEnemy.transform.DORotateQuaternion(nextRound._enemiesAfterJumpPoints[i].rotation, duration));
+
+
+                tween.OnComplete(() => {
+                    curEnemy.SetRigidbodyKinematicState(true);
+                    curEnemy.EnableAnimator(true);
+                    curEnemy.EnableColliders(true);
+                });
                 s.Join(tween);
             }
 
